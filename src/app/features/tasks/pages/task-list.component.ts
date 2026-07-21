@@ -4,10 +4,19 @@ import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { Task } from '../../../core/models/task.model';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { TaskFiltersComponent } from '../components/task-filters.component';
+import { TaskCardComponent } from '../components/task-card.component';
 
 @Component({
   selector: 'app-task-list',
-  standalone: false,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TaskFiltersComponent,
+    TaskCardComponent
+  ],
   template: `
     <div class="list-container">
       <div class="list-header">
@@ -21,7 +30,7 @@ import { Task } from '../../../core/models/task.model';
       </div>
 
       <!-- Filtros Reativos -->
-      <app-task-filters (filterChanged)="onFilterChanged($event)"></app-task-filters>
+      <app-task-filters (filterChanged)="onFilterChanged($event)" />
 
       <!-- Estado de Carregamento -->
       <!-- IMPORTANTE: Usando *ngIf tradicional em vez de @if -->

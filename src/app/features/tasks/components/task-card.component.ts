@@ -1,9 +1,14 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Task } from '../../../core/models/task.model';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-task-card',
-  standalone: false,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   template: `
     <div class="task-card" [class.done]="task.status === 'done'" (click)="onCardClick()">
       <div class="card-header">

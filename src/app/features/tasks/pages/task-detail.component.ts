@@ -1,12 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { Task } from '../../../core/models/task.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-task-detail',
-  standalone: false,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   template: `
     <div class="detail-container">
       <div class="detail-header">

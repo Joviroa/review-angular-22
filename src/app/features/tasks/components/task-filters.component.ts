@@ -1,11 +1,15 @@
+import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, OnInit, Output, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-task-filters',
-  standalone: false,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   template: `
     <!-- IMPORTANTE: Usando Reactive Forms com formGroup e formControlName -->
     <form [formGroup]="filterForm" class="filters-container">
