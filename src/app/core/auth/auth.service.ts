@@ -1,41 +1,27 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay, tap, map } from 'rxjs/operators';
+import { computed, Injectable, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { delay, tap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // PONTO DE MIGRAÇÃO FUTURA: Substituir o BehaviorSubject por WritableSignal para gerenciar o estado do usuário.
-  private currentUserSubject$ = new BehaviorSubject<User | null>(null);
-  
-  // Exposto como Observable para componentes subscreverem (ou usar async pipe)
-  public currentUser$ = this.currentUserSubject$.asObservable();
+  private currentUserSignal = signal<User | null>(null);
+  public currentUser = this.currentUserSignal.asReadonly();
 
-  // Exposto como Observable para saber se está logado de forma reativa
-  public isLoggedIn$ = this.currentUser$.pipe(
-    map(user => user !== null)
-  );
+  public isLoggedIn = computed(() => this.currentUser() !== null);
 
   constructor() {
     // Restaurar sessão ao inicializar o app
     const savedUser = localStorage.getItem('taskflow_user');
     if (savedUser) {
       try {
-        this.currentUserSubject$.next(JSON.parse(savedUser));
+        this.currentUserSignal.set(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem('taskflow_user');
       }
     }
-  }
-
-  /**
-   * Obtém o valor atual síncrono do usuário logado.
-   * PONTO DE MIGRAÇÃO FUTURA: Em Angular moderno, isso seria lido diretamente do signal read-only.
-   */
-  public get currentUserValue(): User | null {
-    return this.currentUserSubject$.value;
   }
 
   /**
@@ -53,7 +39,7 @@ export class AuthService {
       delay(1000), // Simula delay da rede (RxJS of + delay)
       tap(user => {
         localStorage.setItem('taskflow_user', JSON.stringify(user));
-        this.currentUserSubject$.next(user);
+        this.currentUserSignal.set(user);
       })
     );
   }
@@ -63,13 +49,7 @@ export class AuthService {
    */
   logout(): void {
     localStorage.removeItem('taskflow_user');
-    this.currentUserSubject$.next(null);
+    this.currentUserSignal.set(null);
   }
 
-  /**
-   * Método síncrono para verificar se o usuário está logado (usado por guards).
-   */
-  isLoggedIn(): boolean {
-    return this.currentUserSubject$.value !== null;
-  }
 }

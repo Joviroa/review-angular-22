@@ -1,14 +1,13 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay, map, tap } from 'rxjs/operators';
+import { Injectable, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { delay, tap } from 'rxjs/operators';
 import { Task } from '../models/task.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskApiService {
-  // PONTO DE MIGRAÇÃO FUTURA: Esse BehaviorSubject será migrado para um Signal (ou Signal Store) para gerenciar o estado das tarefas de forma simplificada e eficiente.
-  private tasksSubject$ = new BehaviorSubject<Task[]>([
+  private tasksSignal= signal<Task[]>([
     {
       id: 'task-1',
       title: 'Configurar Roteamento Angular 15',
@@ -35,9 +34,8 @@ export class TaskApiService {
     }
   ]);
 
-  // Exposto publicamente como Observable para ser consumido via async pipe no template
-  // PONTO DE MIGRAÇÃO FUTURA: Converter para signal read-only (e.g., tasks = this.tasksSubject.asReadonly())
-  public tasks$ = this.tasksSubject$.asObservable();
+  // Exposto apenas como leitura
+  public tasks = this.tasksSignal.asReadonly();
 
   constructor() {}
 
@@ -45,7 +43,7 @@ export class TaskApiService {
    * Obtém todas as tarefas cadastradas (simulando delay de rede).
    */
   getTasks(): Observable<Task[]> {
-    return of(this.tasksSubject$.value).pipe(
+    return of(this.tasksSignal()).pipe(
       delay(500)
     );
   }
@@ -54,14 +52,14 @@ export class TaskApiService {
    * Obtém uma tarefa pelo ID.
    */
   getTaskById(id: string): Observable<Task | undefined> {
-    const task = this.tasksSubject$.value.find(t => t.id === id);
+    const task = this.tasksSignal().find(t => t.id === id);
     return of(task).pipe(
       delay(300)
     );
   }
 
   /**
-   * Cria uma nova tarefa e emite uma nova lista pelo BehaviorSubject.
+   * Cria uma nova tarefa e emite uma nova lista
    */
   createTask(task: Omit<Task, 'id'>): Observable<Task> {
     const newTask: Task = {
@@ -72,8 +70,7 @@ export class TaskApiService {
     return of(newTask).pipe(
       delay(600),
       tap(createdTask => {
-        const currentTasks = this.tasksSubject$.value;
-        this.tasksSubject$.next([...currentTasks, createdTask]);
+        this.tasksSignal.update(currentTasks => [...currentTasks, createdTask]);
       })
     );
   }
@@ -85,14 +82,11 @@ export class TaskApiService {
     return of(task).pipe(
       delay(600),
       tap(updatedTask => {
-        const currentTasks = this.tasksSubject$.value;
-        const index = currentTasks.findIndex(t => t.id === updatedTask.id);
-        if (index !== -1) {
-          const newTasks = [...currentTasks];
-          newTasks[index] = updatedTask;
-          this.tasksSubject$.next(newTasks);
-        }
+        this.tasksSignal.update(taskList => 
+          taskList.map(t => t.id === updatedTask.id ? updatedTask : t)
+        );
       })
     );
   }
+
 }

@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { Task } from '../../../core/models/task.model';
 import { CommonModule } from '@angular/common';
@@ -41,13 +41,12 @@ import { TaskCardComponent } from '../components/task-card.component';
 
       <!-- Grid de Tarefas -->
       <ng-container *ngIf="!isLoading">
-        <!-- IMPORTANTE: Usando async pipe para fazer o binding do Observable -->
-        <div class="tasks-wrapper" *ngIf="(filteredTasks$ | async) as tasks; else emptyList">
+        <div class="tasks-wrapper" *ngIf="filteredTasks as tasks; else emptyList">
           
           <div class="tasks-grid" *ngIf="tasks.length > 0; else noResults">
             <!-- IMPORTANTE: Usando *ngFor tradicional em vez de @for -->
             <app-task-card 
-              *ngFor="let item of tasks; trackBy: trackByTaskId" 
+              *ngFor="let item of tasks(); trackBy: trackByTaskId" 
               [task]="item"
               (taskClick)="navigateToDetail($event)">
             </app-task-card>
@@ -179,12 +178,28 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
   // Streams reativos de filtros locais
-  private filterTextSubject$ = new BehaviorSubject<string>('');
-  private filterStatusSubject$ = new BehaviorSubject<string>('all');
+  private filterText = signal<string>('');
+  private filterStatus = signal<string>('all');
 
-  // Observable que combina o estado global das tarefas com filtros locais
-  // PONTO DE MIGRAÇÃO FUTURA: Em Angular 22, usaremos computed() signals em vez de combineLatest
-  public filteredTasks$!: Observable<Task[]>;
+  // Filtro combinado de tarefas, texto e status usando signals
+  public filteredTasks = computed(() => {
+    const tasks = this.taskApiService.tasks();
+    const text = this.filterText();
+    const status = this.filterStatus();
+
+    return tasks.filter(task => {
+      const matchesText = !text || 
+        task.title.toLowerCase().includes(text.toLowerCase()) || 
+        task.description.toLowerCase().includes(text.toLowerCase());
+      
+      const matchesStatus = status === 'all' || 
+        (status === 'done' && task.status === 'done') ||
+        (status === 'pending' && task.status === 'pending');
+
+      return matchesText && matchesStatus;
+    });
+  });
+
   public isLoading = false;
 
   // PONTO DE MIGRAÇÃO FUTURA: Substituição por inject(TaskApiService) e inject(Router)
@@ -196,7 +211,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.isLoading = true;
 
-    // Dispara a busca inicial das tarefas na API (atualizando o Subject interno do service)
+    // Dispara a busca inicial das tarefas na API
     this.taskApiService.getTasks().pipe(
       takeUntil(this.destroy$)
     ).subscribe({
@@ -209,31 +224,11 @@ export class TaskListComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Combina reativamente o BehaviorSubject do service de tarefas com os BehaviorSubjects de filtro locais
-    this.filteredTasks$ = combineLatest([
-      this.taskApiService.tasks$,
-      this.filterTextSubject$,
-      this.filterStatusSubject$
-    ]).pipe(
-      map(([tasks, text, status]) => {
-        return tasks.filter(task => {
-          const matchesText = !text || 
-            task.title.toLowerCase().includes(text.toLowerCase()) || 
-            task.description.toLowerCase().includes(text.toLowerCase());
-          
-          const matchesStatus = status === 'all' || 
-            (status === 'done' && task.status === 'done') ||
-            (status === 'pending' && task.status === 'pending');
-
-          return matchesText && matchesStatus;
-        });
-      })
-    );
   }
 
   onFilterChanged(filters: { text: string; status: string }): void {
-    this.filterTextSubject$.next(filters.text);
-    this.filterStatusSubject$.next(filters.status);
+    this.filterText.set(filters.text);
+    this.filterStatus.set(filters.status);
   }
 
   navigateToDetail(taskId: string): void {

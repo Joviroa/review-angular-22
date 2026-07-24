@@ -40,7 +40,7 @@ import { CommonModule } from '@angular/common';
           </a>
         </nav>
 
-        <div class="sidebar-user" *ngIf="authService.currentUser$ | async as user">
+        <div class="sidebar-user" *ngIf="authService.currentUser() as user">
           <div class="user-avatar">
             {{ user.name.charAt(0) }}
           </div>
