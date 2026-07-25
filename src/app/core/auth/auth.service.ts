@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, effect, Injectable, signal, untracked } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay, tap } from 'rxjs/operators';
 import { User } from '../models/user.model';
@@ -13,15 +13,13 @@ export class AuthService {
   public isLoggedIn = computed(() => this.currentUser() !== null);
 
   constructor() {
-    // Restaurar sessão ao inicializar o app
-    const savedUser = localStorage.getItem('taskflow_user');
-    if (savedUser) {
-      try {
-        this.currentUserSignal.set(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('taskflow_user');
-      }
-    }
+    this.currentUserSignal.set(this.load());
+    effect(() => {
+      const user = this.currentUser();
+      untracked(() => {
+        this.save(user);
+      });
+    });
   }
 
   /**
@@ -38,7 +36,6 @@ export class AuthService {
     return of(mockUser).pipe(
       delay(1000), // Simula delay da rede (RxJS of + delay)
       tap(user => {
-        localStorage.setItem('taskflow_user', JSON.stringify(user));
         this.currentUserSignal.set(user);
       })
     );
@@ -48,8 +45,20 @@ export class AuthService {
    * Limpa a sessão do usuário.
    */
   logout(): void {
-    localStorage.removeItem('taskflow_user');
     this.currentUserSignal.set(null);
+  }
+
+  private save(user: User | null) {
+    if (user) {
+      localStorage.setItem('taskflow_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('taskflow_user');
+    }
+  }
+
+  private load(): User | null {
+    const data = localStorage.getItem('taskflow_user');
+    return data ? JSON.parse(data) : null;
   }
 
 }

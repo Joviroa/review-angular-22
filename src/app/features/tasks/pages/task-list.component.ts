@@ -200,7 +200,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     });
   });
 
-  public isLoading = false;
+  public isLoading = signal<boolean>(false);
 
   // PONTO DE MIGRAÇÃO FUTURA: Substituição por inject(TaskApiService) e inject(Router)
   constructor(
@@ -209,17 +209,17 @@ export class TaskListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     // Dispara a busca inicial das tarefas na API
     this.taskApiService.getTasks().pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: (err) => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         console.error('Erro ao buscar tarefas:', err);
       }
     });

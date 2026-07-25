@@ -33,11 +33,7 @@ export class TaskApiService {
       dueDate: '2026-07-28'
     }
   ]);
-
-  // Exposto apenas como leitura
   public tasks = this.tasksSignal.asReadonly();
-
-  constructor() {}
 
   /**
    * Obtém todas as tarefas cadastradas (simulando delay de rede).
