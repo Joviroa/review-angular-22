@@ -3,12 +3,10 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { Task } from '../../../core/models/task.model';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-task-detail',
   imports: [
-    CommonModule,
     ReactiveFormsModule
   ],
   template: `
@@ -24,78 +22,86 @@ import { CommonModule } from '@angular/common';
       </div>
 
       <div class="form-card">
-        <!-- IMPORTANTE: Usando *ngIf tradicional em vez de @if -->
-        <div *ngIf="isLoading" class="loading-state">
-          <div class="spinner"></div>
-          <p>Carregando dados da tarefa...</p>
-        </div>
-
-        <form *ngIf="!isLoading" [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="detail-form">
-          <div class="form-group">
-            <label for="title">Título *</label>
-            <input 
-              id="title"
-              type="text" 
-              formControlName="title" 
-              class="form-control"
-              placeholder="Digite o título da tarefa (Ex: Estudar Angular)"
-              [class.is-invalid]="taskForm.get('title')?.touched && taskForm.get('title')?.invalid"
-            />
-            <div *ngIf="taskForm.get('title')?.touched && taskForm.get('title')?.invalid" class="error-text">
-              O título da tarefa é obrigatório.
-            </div>
+        @if (isLoading) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Carregando dados da tarefa...</p>
           </div>
-
-          <div class="form-group">
-            <label for="description">Descrição</label>
-            <textarea 
-              id="description"
-              formControlName="description" 
-              class="form-control" 
-              rows="5"
-              placeholder="Descreva detalhadamente o que precisa ser feito..."
-            ></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label for="priority">Prioridade</label>
-              <select id="priority" formControlName="priority" class="form-control">
-                <option value="low">Baixa</option>
-                <option value="medium">Média</option>
-                <option value="high">Alta</option>
-              </select>
+        } 
+        @else {
+          <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="detail-form">
+            <div class="form-group">
+              <label for="title">Título *</label>
+              <input 
+                id="title"
+                type="text" 
+                formControlName="title" 
+                class="form-control"
+                placeholder="Digite o título da tarefa (Ex: Estudar Angular)"
+                [class.is-invalid]="taskForm.get('title')?.touched && taskForm.get('title')?.invalid"
+              />
+              @if (taskForm.get('title')?.touched && taskForm.get('title')?.invalid) {
+                <div class="error-text">
+                  O título da tarefa é obrigatório.
+                </div>
+              }
             </div>
 
-            <div class="form-group flex-1">
-              <label for="status">Status</label>
-              <select id="status" formControlName="status" class="form-control">
-                <option value="pending">Pendente</option>
-                <option value="done">Concluída</option>
-              </select>
+            <div class="form-group">
+              <label for="description">Descrição</label>
+              <textarea 
+                id="description"
+                formControlName="description" 
+                class="form-control" 
+                rows="5"
+                placeholder="Descreva detalhadamente o que precisa ser feito..."
+              ></textarea>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="dueDate">Prazo limite</label>
-            <input 
-              id="dueDate"
-              type="date" 
-              formControlName="dueDate" 
-              class="form-control"
-            />
-          </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="priority">Prioridade</label>
+                <select id="priority" formControlName="priority" class="form-control">
+                  <option value="low">Baixa</option>
+                  <option value="medium">Média</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
 
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="isSaving">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary" [disabled]="taskForm.invalid || isSaving">
-              <span *ngIf="!isSaving">Salvar</span>
-              <span *ngIf="isSaving" class="spinner-small"></span>
-            </button>
-          </div>
-        </form>
+              <div class="form-group flex-1">
+                <label for="status">Status</label>
+                <select id="status" formControlName="status" class="form-control">
+                  <option value="pending">Pendente</option>
+                  <option value="done">Concluída</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="dueDate">Prazo limite</label>
+              <input 
+                id="dueDate"
+                type="date" 
+                formControlName="dueDate" 
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="isSaving">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="taskForm.invalid || isSaving">
+                @if (isSaving) {
+                  <span class="spinner-small"></span>
+                }
+                @else {
+                  <span>Salvar</span>
+                }
+              </button>
+            </div>
+          </form>
+        }
       </div>
     </div>
   `,

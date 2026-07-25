@@ -12,7 +12,6 @@ import { TaskCardComponent } from '../components/task-card.component';
 @Component({
   selector: 'app-task-list',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     TaskFiltersComponent,
     TaskCardComponent
@@ -33,44 +32,46 @@ import { TaskCardComponent } from '../components/task-card.component';
       <app-task-filters (filterChanged)="onFilterChanged($event)" />
 
       <!-- Estado de Carregamento -->
-      <!-- IMPORTANTE: Usando *ngIf tradicional em vez de @if -->
-      <div *ngIf="isLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Buscando tarefas do servidor fake...</p>
-      </div>
-
-      <!-- Grid de Tarefas -->
-      <ng-container *ngIf="!isLoading">
-        <div class="tasks-wrapper" *ngIf="filteredTasks as tasks; else emptyList">
-          
-          <div class="tasks-grid" *ngIf="tasks.length > 0; else noResults">
-            <!-- IMPORTANTE: Usando *ngFor tradicional em vez de @for -->
-            <app-task-card 
-              *ngFor="let item of tasks(); trackBy: trackByTaskId" 
-              [task]="item"
-              (taskClick)="navigateToDetail($event)">
-            </app-task-card>
-          </div>
-
-          <ng-template #noResults>
-            <div class="empty-state">
-              <span class="empty-icon">🔍</span>
-              <h3>Nenhuma tarefa encontrada</h3>
-              <p>Tente ajustar os termos de pesquisa ou o filtro de status.</p>
+      @if (isLoading()) {
+         <div class="loading-state">
+           <div class="spinner"></div>
+           <p>Buscando tarefas do servidor fake...</p>
+         </div>
+      }
+      @else {
+        <!-- Grid de Tarefas -->
+        <ng-container>
+          @if (filteredTasks(); as tasks) {
+            <div class="tasks-wrapper">
+              @if (tasks.length > 0) {
+                <div class="tasks-grid">
+                  @for (task of tasks; track trackByTaskId($index, task)) {
+                    <app-task-card 
+                      [task]="task"
+                      (taskClick)="navigateToDetail($event)">
+                    </app-task-card>
+                  }
+                </div>
+              }
+              @else {
+                <div class="empty-state">
+                  <span class="empty-icon">🔍</span>
+                  <h3>Nenhuma tarefa encontrada</h3>
+                  <p>Tente ajustar os termos de pesquisa ou o filtro de status.</p>
+                </div>
+              }
             </div>
-          </ng-template>
-
-        </div>
-      </ng-container>
-
-      <ng-template #emptyList>
-        <div class="empty-state">
-          <span class="empty-icon">📂</span>
-          <h3>Sem tarefas cadastradas</h3>
-          <p>Crie uma nova tarefa para começar a gerenciar seu fluxo de trabalho.</p>
-          <button class="btn btn-primary btn-sm" (click)="navigateToCreate()">Criar Primeira Tarefa</button>
-        </div>
-      </ng-template>
+          }
+          @else {
+            <div class="empty-state">
+              <span class="empty-icon">📂</span>
+              <h3>Sem tarefas cadastradas</h3>
+              <p>Crie uma nova tarefa para começar a gerenciar seu fluxo de trabalho.</p>
+              <button class="btn btn-primary btn-sm" (click)="navigateToCreate()">Criar Primeira Tarefa</button>
+            </div>
+          }
+        </ng-container>
+      }
     </div>
   `,
   styles: [`

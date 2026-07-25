@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, OnInit, Output, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -7,7 +6,6 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-task-filters',
   imports: [
-    CommonModule,
     ReactiveFormsModule
   ],
   template: `

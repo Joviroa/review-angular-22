@@ -1,13 +1,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Task } from '../../../core/models/task.model';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-task-card',
   imports: [
-    CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    DatePipe
   ],
   template: `
     <div class="task-card" [class.done]="task.status === 'done'" (click)="onCardClick()">
@@ -23,12 +23,14 @@ import { ReactiveFormsModule } from '@angular/forms';
       <h3 class="task-title">{{ task.title }}</h3>
       <p class="task-desc">{{ task.description }}</p>
       
-      <!-- IMPORTANTE: Usando *ngIf tradicional em vez de @if -->
-      <div class="card-footer" *ngIf="task.dueDate">
-        <span class="due-date">
-          📅 Prazo: {{ task.dueDate | date:'dd/MM/yyyy':'UTC' }}
-        </span>
-      </div>
+      @if (task.dueDate) {
+        <div class="card-footer">
+          <span class="due-date">
+            📅 Prazo: {{ task.dueDate | date:'dd/MM/yyyy':'UTC' }}
+          </span>
+        </div>
+      }
+      
     </div>
   `,
   styles: [`
