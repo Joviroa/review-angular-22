@@ -4,18 +4,19 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { Task } from '../../../core/models/task.model';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { TaskFiltersComponent } from '../components/task-filters.component';
 import { TaskCardComponent } from '../components/task-card.component';
+import { TaskStatistics } from "../components/task-statistics";
 
 @Component({
   selector: 'app-task-list',
   imports: [
     ReactiveFormsModule,
     TaskFiltersComponent,
-    TaskCardComponent
-  ],
+    TaskCardComponent,
+    TaskStatistics
+],
   template: `
     <div class="list-container">
       <div class="list-header">
@@ -71,6 +72,16 @@ import { TaskCardComponent } from '../components/task-card.component';
             </div>
           }
         </ng-container>
+      }
+      
+      @defer (on viewport) {
+        <app-task-statistics />
+      } @loading {
+        <p>Carregando estatísticas...</p>
+      } @placeholder {
+        <p>Role para baixo para visualizar as estatísticas...</p>
+      } @error {
+        <p>Não foi possível carregar as estatísticas.</p>
       }
     </div>
   `,
